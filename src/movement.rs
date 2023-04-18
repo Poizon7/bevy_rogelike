@@ -80,8 +80,8 @@ pub(crate) fn move_system(
                 .map(|ray| ray.origin.truncate())
             {
                 marker.0.translation = Vec3::from((
-                    snap(mouse_position.x, 20, 1),
-                    snap(mouse_position.y, 20, 1),
+                    snap(mouse_position.x, TILE_SIZE as u32, 1),
+                    snap(mouse_position.y, TILE_SIZE as u32, 1),
                     0.0,
                 ));
                 if buttons.just_pressed(MouseButton::Left) {

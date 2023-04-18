@@ -7,19 +7,20 @@ use movement::{move_system, select_system};
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_startup_system(setup)
         .add_system(select_system)
         .add_system(move_system)
         .run();
 }
 
-const TILE_SIZE: f32 = 20.0;
+const TILE_SIZE: f32 = 60.0;
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Camera2dBundle::default());
     commands
@@ -31,12 +32,12 @@ fn setup(
         })
         .insert(Character);
 
+    // fiende
     commands
-        .spawn(MaterialMesh2dBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+        .spawn(SpriteBundle {
+            texture: asset_server.load("sprites/enemies/Goblin.png"),
             transform: Transform::from_translation(Vec3::new(100., 0., 0.))
-                .with_scale(Vec3::splat(TILE_SIZE)),
-            material: materials.add(ColorMaterial::from(Color::RED)),
+                .with_scale(Vec3::splat(TILE_SIZE / 24.)),
             ..default()
         })
         .insert(Enemy)
