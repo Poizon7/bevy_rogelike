@@ -105,7 +105,7 @@ pub(crate) fn move_system(
     }
 }
 
-fn snap(original: f32, numinator: u32, denuminator: u32) -> f32 {
+pub(crate) fn snap(original: f32, numinator: u32, denuminator: u32) -> f32 {
     (original / numinator as f32 * denuminator as f32).round() * numinator as f32
         / denuminator as f32
 }
