@@ -17,14 +17,14 @@ struct TileMap {
     tiledversion: String,
     tileheight: u32,
     tilesets: Vec<TileSets>,
-    tilewith: u32,
+    tilewidth: u32,
     version: String,
     width: u32,
 }
 
 #[derive(Deserialize, Debug)]
 struct TileSets {
-    firstgrid: u32,
+    firstgid: u32,
     source: String,
 }
 
@@ -84,7 +84,7 @@ pub(crate) fn generate_map(mut commands: Commands, asset_server: Res<AssetServer
     "width":10
    }"#;
 
-    //let data: TileMap = serde_json::from_str(&data_str).unwrap();
+    let data: TileMap = serde_json::from_str(&data_str).unwrap();
 
     //println!("{:?}", data);
 }
