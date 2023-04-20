@@ -1,5 +1,8 @@
-use crate::{Character, Marker, Selected, TILE_SIZE};
+use crate::{Character, Marker, Selected, TILE_SIZE, a_star::a_star};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+
+#[derive(Component)]
+pub struct Path;
 
 pub(crate) fn select_system(
     windows: Query<&Window>,
@@ -62,6 +65,7 @@ pub(crate) fn select_system(
 pub(crate) fn move_system(
     mut selected: Query<&mut Transform, With<Selected>>,
     mut markers: Query<(&mut Transform, Entity), (With<Marker>, Without<Selected>)>,
+    path: Query<Entity, With<Path>>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     buttons: Res<Input<MouseButton>>,
@@ -84,6 +88,21 @@ pub(crate) fn move_system(
                     snap(mouse_position.y, TILE_SIZE as u32, 1),
                     0.0,
                 ));
+
+                for tile in path.iter() {
+                    commands.entity(tile).despawn();
+                }
+
+                let path = a_star(Vec2::new(transform.translation.x, transform.translation.y), Vec2::new(marker.0.translation.x, marker.0.translation.y));
+                for node in path {
+                    commands.spawn(MaterialMesh2dBundle {
+                        mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                        transform: Transform::from_xyz(node.x, node.y, 0.0).with_scale(Vec3::splat(TILE_SIZE / 2.0)),
+                        material: materials.add(ColorMaterial::from(Color::PURPLE)),
+                        ..default()
+                    }).insert(Path);
+                }
+
                 if buttons.just_pressed(MouseButton::Left) {
                     transform.translation = marker.0.translation;
                 }
@@ -101,6 +120,9 @@ pub(crate) fn move_system(
     } else {
         for (_, marker) in markers.iter() {
             commands.entity(marker).despawn();
+        }
+        for tile in path.iter() {
+            commands.entity(tile).despawn();
         }
     }
 }
