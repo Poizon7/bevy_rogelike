@@ -2,13 +2,16 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 mod a_star;
 mod movement;
+mod tilemap_generator;
 
 use movement::{move_system, select_system, snap};
+use tilemap_generator::generate_map;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_startup_system(setup)
+        .add_startup_system(generate_map)
         .add_system(select_system)
         .add_system(move_system)
         .run();
