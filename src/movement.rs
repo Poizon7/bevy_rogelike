@@ -1,5 +1,5 @@
 use crate::{Character, Marker, Selected, TILE_SIZE, a_star::a_star};
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle, transform::commands};
 
 #[derive(Component)]
 pub struct Path;
@@ -45,7 +45,7 @@ pub(crate) fn select_system(
 
     if buttons.just_pressed(MouseButton::Left) {
         if let Some(entity) = hover {
-            commands.entity(entity).insert(Selected);
+            commands.entity(entity).insert(Selected::Deciding);
             commands
                 .entity(entity)
                 .remove::<Handle<ColorMaterial>>()
@@ -63,7 +63,7 @@ pub(crate) fn select_system(
 }
 
 pub(crate) fn move_system(
-    mut selected: Query<&mut Transform, With<Selected>>,
+    mut selected: Query<(&mut Transform, &Selected, Entity)>,
     mut markers: Query<(&mut Transform, Entity), (With<Marker>, Without<Selected>)>,
     path: Query<Entity, With<Path>>,
     windows: Query<&Window>,
@@ -76,53 +76,57 @@ pub(crate) fn move_system(
     let window = windows.single();
     let (camera, camera_transform) = cameras.single();
 
-    if let Some(mut transform) = selected.iter_mut().next() {
-        if let Some(mut marker) = markers.iter_mut().next() {
-            if let Some(mouse_position) = window
-                .cursor_position()
-                .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-                .map(|ray| ray.origin.truncate())
-            {
-                marker.0.translation = Vec3::from((
-                    snap(mouse_position.x, TILE_SIZE as u32, 1),
-                    snap(mouse_position.y, TILE_SIZE as u32, 1),
-                    0.0,
-                ));
+    if let Some((mut transform, selected, entity)) = selected.iter_mut().next() {
+        if matches!(selected, Selected::Movable) {
+            if let Some(mut marker) = markers.iter_mut().next() {
+                if let Some(mouse_position) = window
+                    .cursor_position()
+                    .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+                    .map(|ray| ray.origin.truncate())
+                {
+                    marker.0.translation = Vec3::from((
+                        snap(mouse_position.x, TILE_SIZE as u32, 1),
+                        snap(mouse_position.y, TILE_SIZE as u32, 1),
+                        0.0,
+                    ));
 
-                for tile in path.iter() {
-                    commands.entity(tile).despawn();
+                    for tile in path.iter() {
+                        commands.entity(tile).despawn();
+                    }
+
+                    let path = a_star(Vec2::new(transform.translation.x, transform.translation.y), Vec2::new(marker.0.translation.x, marker.0.translation.y));
+                    for node in path {
+                        commands.spawn(MaterialMesh2dBundle {
+                            mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                            transform: Transform::from_xyz(node.x, node.y, 0.0).with_scale(Vec3::splat(TILE_SIZE / 2.0)),
+                            material: materials.add(ColorMaterial::from(Color::PURPLE)),
+                            ..default()
+                        }).insert(Path);
+                    }
+
+                    if buttons.just_pressed(MouseButton::Left) {
+                        transform.translation = marker.0.translation;
+                        commands.entity(entity).remove::<Selected>();
+                        commands.entity(entity).insert(Selected::Deciding);
+                    }
                 }
-
-                let path = a_star(Vec2::new(transform.translation.x, transform.translation.y), Vec2::new(marker.0.translation.x, marker.0.translation.y));
-                for node in path {
-                    commands.spawn(MaterialMesh2dBundle {
+            } else {
+                commands
+                    .spawn(MaterialMesh2dBundle {
                         mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-                        transform: Transform::from_xyz(node.x, node.y, 0.0).with_scale(Vec3::splat(TILE_SIZE / 2.0)),
+                        transform: Transform::default().with_scale(Vec3::splat(TILE_SIZE)),
                         material: materials.add(ColorMaterial::from(Color::PURPLE)),
                         ..default()
-                    }).insert(Path);
-                }
-
-                if buttons.just_pressed(MouseButton::Left) {
-                    transform.translation = marker.0.translation;
-                }
+                    })
+                    .insert(Marker);
             }
         } else {
-            commands
-                .spawn(MaterialMesh2dBundle {
-                    mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-                    transform: Transform::default().with_scale(Vec3::splat(TILE_SIZE)),
-                    material: materials.add(ColorMaterial::from(Color::PURPLE)),
-                    ..default()
-                })
-                .insert(Marker);
-        }
-    } else {
-        for (_, marker) in markers.iter() {
-            commands.entity(marker).despawn();
-        }
-        for tile in path.iter() {
-            commands.entity(tile).despawn();
+            for (_, marker) in markers.iter() {
+                commands.entity(marker).despawn();
+            }
+            for tile in path.iter() {
+                commands.entity(tile).despawn();
+            }
         }
     }
 }

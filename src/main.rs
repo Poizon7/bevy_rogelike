@@ -3,22 +3,36 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 mod a_star;
 mod movement;
 mod tilemap_generator;
+mod ui;
 
 use movement::{move_system, select_system, snap};
 use tilemap_generator::generate_map;
+use ui::{setup_ui, button_system, taskbar_visibility_system};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_startup_system(setup)
-        .add_startup_system(generate_map)
+        // .add_startup_system(generate_map)
         .add_system(select_system)
         .add_system(move_system)
+        .add_startup_system(setup_ui)
+        .add_system(taskbar_visibility_system)
+        .add_system(button_system)
         .run();
 }
 
 const TILE_SIZE: f32 = 80.0;
 const SPRITE_SIZE: f32 = 24.0;
+
+#[derive(Component)]
+pub enum Selected {
+    Deciding,
+    Movable,
+    Moving,
+    AbleToAttack,
+    Attacking,
+}
 
 fn setup(
     mut commands: Commands,
@@ -56,9 +70,6 @@ fn setup(
 
 #[derive(Component)]
 struct Character;
-
-#[derive(Component)]
-struct Selected;
 
 #[derive(Component)]
 struct Marker;
