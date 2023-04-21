@@ -1,5 +1,5 @@
 use crate::{Character, Marker, Selected, TILE_SIZE, a_star::a_star};
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, transform::commands};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 #[derive(Component)]
 pub struct Path;

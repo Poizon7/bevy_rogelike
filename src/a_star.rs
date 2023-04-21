@@ -81,10 +81,6 @@ fn reconstruct_path(node: Node) -> Vec<Vec2> {
     total_path
 }
 
-fn manhattan_distance(start: &Vec2, goal: &Vec2) -> f32 {
-    (start.x - goal.x).abs() + (start.y - goal.y).abs()
-}
-
 fn least(node_list: &Vec<Node>) -> &Node {
     let mut least = node_list.first().unwrap();
 

@@ -1,19 +1,18 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 
 mod a_star;
 mod movement;
 mod tilemap_generator;
 mod ui;
+mod attack;
 
 use movement::{move_system, select_system, snap};
-use tilemap_generator::generate_map;
 use ui::{setup_ui, button_system, taskbar_visibility_system};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_startup_system(setup)
-        // .add_startup_system(generate_map)
         .add_system(select_system)
         .add_system(move_system)
         .add_startup_system(setup_ui)
@@ -36,8 +35,6 @@ pub enum Selected {
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Camera2dBundle::default()); // kamera
