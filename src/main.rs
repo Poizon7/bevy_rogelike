@@ -5,9 +5,14 @@ mod movement;
 mod tilemap_generator;
 mod ui;
 mod attack;
+mod select;
+mod death;
 
-use movement::{move_system, select_system, snap};
+use movement::{move_system, snap};
 use ui::{setup_ui, button_system, taskbar_visibility_system};
+use select::select_system;
+use attack::attack_system;
+use death::death_system;
 
 fn main() {
     App::new()
@@ -18,6 +23,8 @@ fn main() {
         .add_startup_system(setup_ui)
         .add_system(taskbar_visibility_system)
         .add_system(button_system)
+        .add_system(attack_system)
+        .add_system(death_system)
         .run();
 }
 
@@ -75,13 +82,5 @@ struct Marker;
 struct Enemy;
 
 #[derive(Component)]
-struct Health(u32);
+pub struct Health(u32);
 
-#[derive(Component)]
-struct Active;
-
-#[derive(Component)]
-struct Attacker;
-
-#[derive(Component)]
-struct Defender;

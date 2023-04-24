@@ -50,7 +50,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "B",
+                        "A",
                         TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: 40.0,
@@ -95,6 +95,13 @@ pub fn button_system(
                     for entity in selected.iter() {
                         commands.entity(entity).remove::<Selected>();
                         commands.entity(entity).insert(Selected::Movable);
+                    }
+                }
+
+                else if text.sections[0].value == "A" {
+                    for entity in selected.iter() {
+                        commands.entity(entity).remove::<Selected>();
+                        commands.entity(entity).insert(Selected::AbleToAttack);
                     }
                 }
             }

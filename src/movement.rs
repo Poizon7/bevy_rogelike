@@ -1,66 +1,9 @@
-use crate::{Character, Marker, Selected, TILE_SIZE, a_star::a_star};
+use crate::{Marker, Selected, TILE_SIZE, a_star::a_star};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 #[derive(Component)]
 pub struct Path;
 
-pub(crate) fn select_system(
-    windows: Query<&Window>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
-    characters: Query<(&Transform, Entity), (With<Character>, Without<Selected>)>,
-    selected: Query<Entity, With<Selected>>,
-    mut commands: Commands,
-    buttons: Res<Input<MouseButton>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let window = windows.single();
-    let (camera, camera_transform) = cameras.single();
-
-    let mut hover: Option<Entity> = None;
-
-    if let Some(mouse_position) = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
-    {
-        for (transform, entity) in characters.iter() {
-            if transform.translation.x - TILE_SIZE / 2.0 < mouse_position.x
-                && transform.translation.x + TILE_SIZE / 2.0 > mouse_position.x
-                && transform.translation.y - TILE_SIZE / 2.0 < mouse_position.y
-                && transform.translation.y + TILE_SIZE / 2.0 > mouse_position.y
-            {
-                hover = Some(entity);
-                commands
-                    .entity(entity)
-                    .remove::<Handle<ColorMaterial>>()
-                    .insert(materials.add(ColorMaterial::from(Color::GREEN)));
-            } else {
-                commands
-                    .entity(entity)
-                    .remove::<Handle<ColorMaterial>>()
-                    .insert(materials.add(ColorMaterial::from(Color::PURPLE)));
-            }
-        }
-    }
-
-    if buttons.just_pressed(MouseButton::Left) {
-        if let Some(entity) = hover {
-            commands.entity(entity).insert(Selected::Deciding);
-            commands
-                .entity(entity)
-                .remove::<Handle<ColorMaterial>>()
-                .insert(materials.add(ColorMaterial::from(Color::BLUE)));
-        } else {
-            for entity in selected.iter() {
-                commands.entity(entity).remove::<Selected>();
-                commands
-                    .entity(entity)
-                    .remove::<Handle<ColorMaterial>>()
-                    .insert(materials.add(ColorMaterial::from(Color::PURPLE)));
-            }
-        }
-    }
-}
 
 pub(crate) fn move_system(
     mut selected: Query<(&mut Transform, &Selected, Entity)>,
