@@ -14,7 +14,8 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ..default()
             },
             ..default()
-        }).insert(TaskBar)
+        })
+        .insert(TaskBar)
         .with_children(|parent| {
             parent
                 .spawn(ButtonBundle {
