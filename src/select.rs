@@ -14,6 +14,9 @@ pub(crate) fn select_system(
     if let Some(mouse_position) = mouse_position.0 {
         for (transform, entity, selected, movement_speed, mut action_points) in characters.iter_mut() {
             if let Some(selected) = selected {
+                if matches!(selected, Selected::Deciding) && (*action_points).current == 0 {
+                    commands.entity(entity).remove::<Selected>();
+                }
                 if buttons.just_pressed(MouseButton::Left) {
                     match selected {
                         Selected::Movable => {
@@ -22,9 +25,7 @@ pub(crate) fn select_system(
                             let movement_cost = (path.len() as u8 - 2) / movement_speed.0 + 1;
 
                             if movement_cost <= (*action_points).current {
-                                println!("cost: {:?}", movement_cost);
                                 (*action_points).current -= movement_cost;
-                                println!("points: {:?}", (*action_points).current);
                                 commands.entity(entity).remove::<Selected>().insert(Selected::Moving(path));
                             }
                         },

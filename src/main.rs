@@ -9,6 +9,7 @@ mod select;
 mod death;
 mod turn;
 mod input;
+mod enemy;
 
 use input::mouse_position_system;
 use movement::{display_path, snap, move_system};
@@ -17,6 +18,7 @@ use ui::{setup_ui, button_system, taskbar_visibility_system};
 use select::select_system;
 use attack::attack_system;
 use death::death_system;
+use enemy::ai;
 
 fn main() {
     App::new()
@@ -34,6 +36,7 @@ fn main() {
         .add_system(death_system)
         .add_system(turn_system)
         .add_system(move_system)
+        .add_system(ai)
         .run();
 }
 
@@ -48,7 +51,7 @@ pub struct ActionPoints {
 
 impl ActionPoints {
     fn new(max: u8) -> Self {
-        ActionPoints { current: 0, max }
+        ActionPoints { current: max, max }
     }
 }
 
@@ -139,10 +142,10 @@ impl Default for EnemyBundle {
     fn default() -> Self {
         EnemyBundle {
             enemy: Enemy,
-            health: Health(20),
-            action_points: ActionPoints::new(0),
+            health: Health(10),
+            action_points: ActionPoints::new(2),
             sprite: SpriteBundle::default(),
-            movement_speed: MovementSpeed(2),
+            movement_speed: MovementSpeed(5),
         }
     }
 }
