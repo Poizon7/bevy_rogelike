@@ -1,23 +1,27 @@
-use crate::{Marker, Selected, TILE_SIZE, a_star::a_star, MousePosition};
+use crate::{a_star::a_star, Marker, MousePosition, Selected, TILE_SIZE};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 #[derive(Component)]
 pub struct Path;
 
-
-pub(crate) fn move_system(mut actors: Query<(&mut Transform, &mut Selected, Entity)>, mut commands: Commands) {
+pub(crate) fn move_system(
+    mut actors: Query<(&mut Transform, &mut Selected, Entity)>,
+    mut commands: Commands,
+) {
     for (mut transform, mut selected, entity) in actors.iter_mut() {
         match selected.as_mut() {
             Selected::Moving(ref mut path) => {
                 let position = path.pop().unwrap();
                 transform.translation = Vec3::new(position.x, position.y, 0.0);
                 if path.len() == 0 {
-                    commands.entity(entity).remove::<Selected>().insert(Selected::Deciding);
+                    commands
+                        .entity(entity)
+                        .remove::<Selected>()
+                        .insert(Selected::Deciding);
                 }
-            },
+            }
             _ => {}
         }
-
     }
 }
 
@@ -25,10 +29,11 @@ pub fn display_path(
     selected: Query<(&Transform, &Selected)>,
     path: Query<Entity, With<Path>>,
     mouse_position: Res<MousePosition>,
+    asset_server: Res<AssetServer>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    ) {
+) {
     if let Some((transform, selected)) = selected.iter().next() {
         if matches!(selected, Selected::Movable) {
             if let Some(mouse_position) = mouse_position.0 {
@@ -41,9 +46,24 @@ pub fn display_path(
                     commands.entity(tile).despawn();
                 }
 
-                let path = a_star(Vec2::new(transform.translation.x, transform.translation.y), end_position);
+                let path = a_star(
+                    Vec2::new(transform.translation.x, transform.translation.y),
+                    end_position,
+                );
 
                 for (i, node) in path.iter().enumerate() {
+                    // för att sätta ut marker vid mus positionen
+                    if i == 0 {
+                        commands
+                            .spawn(SpriteBundle {
+                                texture: asset_server.load("sprites/ui/Marker.png"),
+                                transform: Transform::from_xyz(node.x, node.y, 0.0)
+                                    .with_scale(Vec3::splat(TILE_SIZE / 24.0)),
+                                ..default()
+                            })
+                            .insert(Path);
+                    }
+
                     let color = if path.len() as isize - i as isize - 2 < 5 {
                         materials.add(ColorMaterial::from(Color::GREEN))
                     } else if path.len() as isize - i as isize - 2 < 10 {
@@ -51,12 +71,15 @@ pub fn display_path(
                     } else {
                         materials.add(ColorMaterial::from(Color::RED))
                     };
-                    commands.spawn(MaterialMesh2dBundle {
-                        mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-                        transform: Transform::from_xyz(node.x, node.y, 0.0).with_scale(Vec3::splat(TILE_SIZE / 2.0)),
-                        material: color,
-                        ..default()
-                    }).insert(Path);
+                    commands
+                        .spawn(MaterialMesh2dBundle {
+                            mesh: meshes.add(Mesh::from(shape::Circle::default())).into(),
+                            transform: Transform::from_xyz(node.x, node.y, 0.0)
+                                .with_scale(Vec3::splat(TILE_SIZE / 4.0)),
+                            material: color,
+                            ..default()
+                        })
+                        .insert(Path);
                 }
             }
         } else {
